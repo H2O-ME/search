@@ -26,6 +26,9 @@ class AISearchEngine {
         
         this.initializeElements();
         this.bindEvents();
+        
+        // 添加开屏动画处理
+        this.handleSplashScreen();
     }
 
     initializeElements() {
@@ -946,6 +949,18 @@ class AISearchEngine {
             `;
         } catch (error) {
             console.error('显示思维导图失败:', error);
+        }
+    }
+
+    // 添加开屏动画处理方法
+    handleSplashScreen() {
+        const splashScreen = document.querySelector('.splash-screen');
+        if (splashScreen) {
+            setTimeout(() => {
+                splashScreen.addEventListener('animationend', () => {
+                    splashScreen.remove();
+                });
+            }, 1500);
         }
     }
 }
