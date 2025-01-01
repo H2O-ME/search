@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI搜索引擎</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI搜索引擎</h1>
+        </header>
+        
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="请输入您的问题...">
+            <button id="searchBtn">搜索</button>
+        </div>
+
+        <div class="steps-container">
+            <div class="step">
+                <h2>Step 1: 快速搜索结果</h2>
+                <div id="quickSearchResults"></div>
+            </div>
+
+            <div class="step">
+                <h2>Step 2: 问题分析</h2>
+                <div id="subQuestions"></div>
+                <div class="actions">
+                    <button id="editBtn">编辑</button>
+                    <button id="splitBtn">拆分</button>
+                </div>
+            </div>
+
+            <div class="step">
+                <h2>Step 3: 深度搜索结果</h2>
+                <div id="deepSearchResults"></div>
+                <div class="actions">
+                    <button id="downloadBtn">下载报告</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 

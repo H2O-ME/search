@@ -1,0 +1,381 @@
+:root {
+    /* 主色调 */
+    --primary-color: #2563eb;      /* 深蓝色 - 主色调 */
+    --primary-light: #60a5fa;      /* 浅蓝色 - 次要色调 */
+    --primary-dark: #1e40af;       /* 暗蓝色 - 强调色 */
+    
+    /* 辅助色 */
+    --success-color: #10b981;      /* 绿色 - 成功状态 */
+    --warning-color: #f59e0b;      /* 橙色 - 警告状态 */
+    --error-color: #ef4444;        /* 红色 - 错误状态 */
+    
+    /* 中性色 */
+    --bg-color: #f8fafc;           /* 背景色 */
+    --text-primary: #1e293b;       /* 主要文本 */
+    --text-secondary: #64748b;     /* 次要文本 */
+    --border-color: #e2e8f0;       /* 边框颜色 */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 3rem;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    letter-spacing: -0.5px;
+    margin-bottom: 1rem;
+}
+
+.search-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    animation: fadeIn 1s ease-out;
+}
+
+#searchInput {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background-color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+#searchInput:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    outline: none;
+}
+
+button {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.4);
+}
+
+.steps-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.step {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    animation: slideUp 0.6s ease-out;
+}
+
+.step h2 {
+    color: var(--primary-dark);
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* 动画定义 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 统一的搜索结果卡片样式 */
+.result-item, .search-result-item {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--primary-light);
+}
+
+.result-item:hover, .search-result-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-left-color: var(--primary-color);
+}
+
+.result-item h3, .result-item h4, .search-result-item h4 {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.result-item a, .search-result-item a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.result-item a:hover, .search-result-item a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.result-item p, .search-result-item p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+}
+
+/* 思维导图样式优化 */
+.mind-map-container {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: linear-gradient(to right bottom, #ffffff, #f8fafc);
+    border-radius: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.mind-map-container h3 {
+    color: var(--primary-dark);
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.mind-map-image {
+    width: 100%;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.mind-map-image:hover {
+    transform: scale(1.02);
+}
+
+/* 响应式设计优化 */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+
+    .search-container {
+        flex-direction: column;
+    }
+
+    button {
+        width: 100%;
+    }
+} 
+
+/* 问题分析样式优化 */
+.sub-questions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.question-item {
+    padding: 1.2rem;
+    background: linear-gradient(to right, #ffffff, var(--bg-color));
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.question-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.question-number {
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 1.1rem;
+    min-width: 24px;
+}
+
+.question-content {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* 深度搜索结果样式 */
+.deep-results-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.stream-content {
+    padding: 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+/* Markdown 渲染样式 */
+.section-title {
+    color: var(--primary-dark);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 2rem 0 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+    letter-spacing: -0.5px;
+}
+
+.section-subtitle {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 1.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    letter-spacing: -0.3px;
+}
+
+.section-analysis {
+    color: var(--text-secondary);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 1.5rem 0 1rem;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid var(--primary-light);
+    background: linear-gradient(to right, var(--bg-color), white);
+    border-radius: 0 8px 8px 0;
+}
+
+.stream-content p {
+    color: var(--text-primary);
+    line-height: 1.8;
+    margin: 1rem 0;
+    padding: 0 0.5rem;
+}
+
+.stream-content strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.stream-content .reference {
+    color: var(--primary-light);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.2rem 0.4rem;
+    margin: 0 0.2rem;
+    background-color: var(--bg-color);
+    border-radius: 4px;
+    vertical-align: super;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.stream-content .reference:hover {
+    color: var(--primary-color);
+    background-color: rgba(37, 99, 235, 0.1);
+}
+
+/* 参考资料容器优化 */
+.references-container {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.references-container h3 {
+    color: var(--primary-dark);
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid var(--primary-color);
+    letter-spacing: -0.3px;
+}
+
+.search-results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+} 
