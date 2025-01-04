@@ -29,6 +29,12 @@ class AISearchEngine {
         
         // 添加开屏动画处理
         this.handleSplashScreen();
+
+        // 添加清除状态的方法
+        this.clearPreviousResults = this.clearPreviousResults.bind(this);
+
+        // 添加控制器用于终止请求
+        this.currentController = null;
     }
 
     initializeElements() {
@@ -55,6 +61,9 @@ class AISearchEngine {
         const query = this.searchInput.value.trim();
         if (!query) return;
 
+        // 在开始新搜索前清除之前的结果
+        this.clearPreviousResults();
+
         try {
             // 显示加载状态
             this.showLoading(this.quickSearchResults);
@@ -72,9 +81,8 @@ class AISearchEngine {
             this.displaySubQuestions(subQuestions);
 
             // Step 3: 深度搜索
-            const deepSearchResults = await this.performDeepSearch(subQuestions);
+            await this.performDeepSearch(subQuestions);
             this.hideLoading(this.deepSearchResults);
-            this.displayDeepSearchResults(deepSearchResults);
         } catch (error) {
             console.error('搜索过程出错:', error);
             this.showError('搜索过程出错，请稍后重试');
@@ -172,6 +180,20 @@ class AISearchEngine {
 
     async performDeepSearch(subQuestions) {
         try {
+            // 创建新的 AbortController
+            this.currentController = new AbortController();
+            
+            // 获取用户原始问题
+            const originalQuery = this.searchInput.value.trim();
+
+            // 在深度搜索结果区域显示原始问题
+            this.deepSearchResults.innerHTML = `
+                <div class="original-query">
+                    <h3>您的问题</h3>
+                    <p>${originalQuery}</p>
+                </div>
+            `;
+
             // 首先发送原始分析请求
             const response = await fetch(this.assistantUrl, {
                 method: 'POST',
@@ -191,7 +213,8 @@ class AISearchEngine {
                         }]
                     }],
                     stream: true
-                })
+                }),
+                signal: this.currentController.signal
             });
 
             if (!response.ok) {
@@ -201,52 +224,69 @@ class AISearchEngine {
             // 初始化结果容器
             let currentResults = this.initializeSearchResults();
             
-            // 处理流式响应
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
+            try {
+                // 处理流式响应
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
 
-            while (true) {
-                const {done, value} = await reader.read();
-                if (done) break;
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
 
-                buffer += decoder.decode(value, {stream: true});
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
+                    buffer += decoder.decode(value, {stream: true});
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
 
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6).trim());
-                            if (!data) continue;
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6).trim());
+                                if (!data) continue;
 
-                            if (data.choices?.[0]?.delta) {
-                                const delta = data.choices[0].delta;
-                                
-                                if (delta.role === 'tool' && delta.tool_calls) {
-                                    for (const call of delta.tool_calls) {
-                                        if (call.type === 'web_browser' && call.web_browser?.outputs) {
-                                            currentResults.searchResults.push(...call.web_browser.outputs);
+                                if (data.choices?.[0]?.delta) {
+                                    const delta = data.choices[0].delta;
+                                    
+                                    if (delta.role === 'tool' && delta.tool_calls) {
+                                        for (const call of delta.tool_calls) {
+                                            if (call.type === 'web_browser' && call.web_browser?.outputs) {
+                                                currentResults.searchResults.push(...call.web_browser.outputs);
+                                            }
                                         }
                                     }
+                                    
+                                    if (delta.content) {
+                                        currentResults.fullResponse += delta.content;
+                                        this.tryParseAndUpdateResults(currentResults);
+                                    }
                                 }
-                                
-                                if (delta.content) {
-                                    currentResults.fullResponse += delta.content;
-                                    this.tryParseAndUpdateResults(currentResults);
-                                }
+                            } catch (e) {
+                                console.warn('解析SSE数据失败:', e);
                             }
-                        } catch (e) {
-                            console.warn('解析SSE数据失败:', e);
                         }
                     }
                 }
+
+                // 在完整响应接收完后生成思维导图
+                if (currentResults.fullResponse) {
+                    await this.generateMindMap(currentResults.fullResponse);
+                }
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.log('流式响应被终止');
+                    // 清理读取器
+                    await reader?.cancel();
+                    return;
+                }
+                throw error; // 重新抛出其他错误
             }
 
-            // 生成思维导图
-            await this.generateMindMap(currentResults.fullResponse);
-
         } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('请求被终止');
+                return;
+            }
             console.error('深度搜索失败:', error);
             this.showDeepSearchError(error.message);
         }
@@ -259,26 +299,34 @@ class AISearchEngine {
         const additionalQuestions = questions.slice(1);
 
         return `
-            搜索最新的联网信息，详细回答问题：${mainQuestion}
+            首先，请直接回答用户的问题：
+            ${mainQuestion}
+
+            回答格式：
+            # 直接回答
+            [简明扼要的直接回答，不超过300字]
+
+            然后，请基于最新的联网信息，详细分析：
+            ${mainQuestion}
             ${additionalQuestions.length > 0 ? `
-            同时搜索并回答以下问题：
+            同时分析以下相关问题：
             ${additionalQuestions.map(q => `- ${q}`).join('\n')}
             ` : ''}
 
-            按照以下的markdown格式回答每个问题：
-            #问题
-            [问题内容]
+            分析格式：
+            # 详细分析
+            [基于最新搜索结果的详细分析]
 
-            ##回答
-            [基于最新搜索结果的详细回答]
+            ## 关键要点
+            [列出3-5个关键分析要点]
 
-            ###分析点
-            [关键分析要点，包括数据支持和参考来源]
+            ## 参考来源
+            [列出主要参考来源，使用[ref_x]标注]
 
             注意：
-            1. 每个问题的回答都需要基于最新的互联网搜索结果
-            2. 回答要详细、准确，并突出关键分析点
-            3. 请确保引用可靠的信息来源，使用[ref_x]标注引用
+            1. 先给出简明的直接回答
+            2. 再提供详细的分析和论证
+            3. 确保引用可靠的信息来源
         `;
     }
 
@@ -393,22 +441,6 @@ class AISearchEngine {
                 `).join('')}
             </div>
         `;
-    }
-
-    displayDeepSearchResults(results) {
-        if (!results.length) {
-            this.deepSearchResults.innerHTML = '<div class="no-results">暂无深度分析结果</div>';
-            return;
-        }
-
-        this.deepSearchResults.innerHTML = results.map(result => `
-            <div class="deep-result-item">
-                <h3>${result.title}</h3>
-                <div class="deep-result-content">
-                    ${result.content}
-                </div>
-            </div>
-        `).join('');
     }
 
     handleEdit() {
@@ -574,16 +606,7 @@ class AISearchEngine {
             const formattedText = this.formatResponseText(results.fullResponse);
             streamContent.innerHTML = formattedText;
 
-            // 获取或创建思维导图容器
-            let mindMapContainer = resultsContainer.querySelector('.mind-map-container');
-            if (!mindMapContainer) {
-                mindMapContainer = document.createElement('div');
-                mindMapContainer.className = 'mind-map-container';
-                // 将思维导图插入到流式输出之后
-                streamContent.after(mindMapContainer);
-            }
-
-            // 如果有搜索结果，显示在思维导图下方
+            // 如果有搜索结果，显示在最后
             let referencesContainer = resultsContainer.querySelector('.references-container');
             if (results.searchResults?.length > 0) {
                 if (!referencesContainer) {
@@ -604,12 +627,6 @@ class AISearchEngine {
                     </div>
                 `;
             }
-
-            // 在流式输出完成后生成思维导图
-            if (results.fullResponse.includes('###')) {
-                this.generateMindMap(results.fullResponse);
-            }
-
         } catch (e) {
             console.error('显示响应失败:', e);
             this.showDeepSearchError(`显示失败: ${e.message}`);
@@ -862,6 +879,12 @@ class AISearchEngine {
     // 修改generateMindMap方法
     async generateMindMap(content) {
         try {
+            // 如果已经被中断，直接返回
+            if (!this.currentController) {
+                console.log('思维导图生成被取消');
+                return;
+            }
+
             const response = await fetch(this.assistantUrl, {
                 method: 'POST',
                 headers: {
@@ -871,7 +894,7 @@ class AISearchEngine {
                 body: JSON.stringify({
                     assistant_id: '664e0cade018d633146de0d2',
                     model: "glm-4-assistant",
-                    stream: true,  // 使用流式输出
+                    stream: true,
                     messages: [{
                         role: "user",
                         content: [{
@@ -879,7 +902,8 @@ class AISearchEngine {
                             text: `请根据以下内容生成一个思维导图：\n\n${content}`
                         }]
                     }]
-                })
+                }),
+                signal: this.currentController.signal // 使用相同的控制器
             });
 
             if (!response.ok) {
@@ -892,31 +916,42 @@ class AISearchEngine {
             let buffer = '';
             let mindMapContent = '';
 
-            while (true) {
-                const {done, value} = await reader.read();
-                if (done) break;
+            try {
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
 
-                buffer += decoder.decode(value, {stream: true});
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
+                    buffer += decoder.decode(value, {stream: true});
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
 
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6).trim());
-                            if (data.choices?.[0]?.delta?.content) {
-                                mindMapContent += data.choices[0].delta.content;
-                                // 实时更新思维导图显示
-                                this.displayMindMap(mindMapContent);
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6).trim());
+                                if (data.choices?.[0]?.delta?.content) {
+                                    mindMapContent += data.choices[0].delta.content;
+                                    // 实时更新思维导图显示
+                                    this.displayMindMap(mindMapContent);
+                                }
+                            } catch (e) {
+                                console.warn('解析思维导图数据失败:', e);
                             }
-                        } catch (e) {
-                            console.warn('解析思维导图数据失败:', e);
                         }
                     }
                 }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.log('思维导图生成被终止');
+                    await reader?.cancel();
+                    return;
+                }
+                throw error;
             }
         } catch (error) {
-            console.error('生成思维导图失败:', error);
+            if (error.name !== 'AbortError') {
+                console.error('生成思维导图失败:', error);
+            }
         }
     }
 
@@ -961,6 +996,35 @@ class AISearchEngine {
                     splashScreen.remove();
                 });
             }, 1500);
+        }
+    }
+
+    clearPreviousResults() {
+        try {
+            // 终止当前进行中的请求
+            if (this.currentController) {
+                this.currentController.abort();
+                this.currentController = null;
+            }
+
+            // 清除所有结果容器的内容
+            const resultContainers = document.querySelectorAll('.result-container');
+            resultContainers.forEach(container => {
+                container.innerHTML = '';
+            });
+
+            // 重置流式响应状态
+            this.streamStatus = {
+                requestId: null,
+                startTime: null,
+                tokensUsed: {
+                    prompt: 0,
+                    completion: 0,
+                    total: 0
+                }
+            };
+        } catch (error) {
+            console.error('清除结果时出错:', error);
         }
     }
 }

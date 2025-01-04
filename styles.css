@@ -483,3 +483,45 @@ button:hover {
         transform: translateY(0);
     }
 } 
+
+/* 添加原始问题样式 */
+.original-query {
+    background: linear-gradient(to right, #ffffff, var(--bg-color));
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.original-query h3 {
+    color: var(--primary-dark);
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+}
+
+.original-query p {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    line-height: 1.6;
+} 
+
+/* 添加直接回答部分的样式 */
+.stream-content h1:first-of-type {
+    color: var(--primary-dark);
+    font-size: 1.5rem;
+    margin: 1.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.stream-content h1:first-of-type + p {
+    background: linear-gradient(to right, #ffffff, var(--bg-color));
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid var(--success-color);
+    margin: 1rem 0 2rem;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+} 
